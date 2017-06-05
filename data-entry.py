@@ -7,6 +7,7 @@ import unicodecsv
 with open('sample1.csv', 'rb') as f1, open('sample2.csv', 'rb') as f2, \
     open('sample3.csv', 'rb') as f3, open('merge.csv', 'wb') as merge_file, \
     open('conflict.csv', 'wb') as conflict_file:
+    # conveniently handles closing all the files again
 
     rdr1 = unicodecsv.reader(f1, encoding='utf-8-sig')
     rdr2 = unicodecsv.reader(f2, encoding='utf-8-sig')
@@ -19,11 +20,11 @@ with open('sample1.csv', 'rb') as f1, open('sample2.csv', 'rb') as f2, \
         for row in file:
             label_set.add(row[0]) # assume first csv value is label
 
-    # initialize some containers
+    # initialize some helpful containers with dict comprehesion
     merge_dict = {item : [] for item in label_set}
     conflict_val_dict = {item : set() for item in label_set}
-    conflict_rows = []
 
+    # create dictionary for final csv such that each value only occurs once
     for file in file_list:
         for row in file:
             for val in row[1:]:
@@ -32,10 +33,8 @@ with open('sample1.csv', 'rb') as f1, open('sample2.csv', 'rb') as f2, \
                 else: # a value in the row already on the platform
                     conflict_val_dict[row[0]].add(val)
 
-    # print("Merge dictionary:")
-    # print(merge_dict)
-
     # get all the conflict_rows
+    conflict_rows = []
     for file in file_list:
         for row in file:
             conflict = False
@@ -46,19 +45,16 @@ with open('sample1.csv', 'rb') as f1, open('sample2.csv', 'rb') as f2, \
             if conflict and row not in conflict_rows:
                 conflict_rows.append(row)
 
-    # print("List of conflicting rows:")
-    # print(conflict_rows)
-
     # write to the merge csv
     merge_writer = unicodecsv.writer(merge_file, encoding='utf-8-sig')
     for key in merge_dict.keys():
         row = merge_dict[key]
-        row = [int(x) for x in row if x != '']
+        row = [int(x) for x in row if x != ''] # remove
         row.sort()
         row.insert(0, key)
         merge_writer.writerow(row)
 
-    # write to the conflict file
+    # write to the conflict csv
     conflict_writer = unicodecsv.writer(conflict_file, encoding='utf-8-sig')
     for row in conflict_rows:
         conflict_writer.writerow(row)
