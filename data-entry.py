@@ -45,16 +45,27 @@ with open('sample1.csv', 'rb') as f1, open('sample2.csv', 'rb') as f2, \
             if conflict and row not in conflict_rows:
                 conflict_rows.append(row)
 
-    # write to the merge csv
+    # write to merged.csv
     merge_writer = unicodecsv.writer(merge_file, encoding='utf-8-sig')
     for key in merge_dict.keys():
-        row = merge_dict[key]
-        row = [int(x) for x in row if x != ''] # remove
-        row.sort()
-        row.insert(0, key)
-        merge_writer.writerow(row)
+        entry = merge_dict[key]
+        entry = [int(x) for x in entry if x != ''] # remove
+        entry.sort()
+        entry.insert(0, key)
+        merge_writer.writerow(entry)
 
-    # write to the conflict csv
+    # write to the conflicts conflict.csv
     conflict_writer = unicodecsv.writer(conflict_file, encoding='utf-8-sig')
-    for row in conflict_rows:
-        conflict_writer.writerow(row)
+
+    # filecount = 1 # uncomment to append source files
+    for file in file_list:
+        rowcount = 1
+        for row in file:
+            for val in row[1:]:
+                if val in conflict_val_dict[row[0]]:
+                    entry = [rowcount]
+                    entry += [row[0],val]
+                    # entry += ["sample"+str(filecount)+".csv"] # uncomment to append source files
+                    conflict_writer.writerow(entry)
+            rowcount += 1
+        # filecount += 1 # uncomment to append source files
